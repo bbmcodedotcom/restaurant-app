@@ -1,0 +1,63 @@
+model User {
+  id        String     @id @default(cuid())
+  name      String?
+  email     String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  favorites Favorite[]
+}
+
+model Restaurant {
+  id          String     @id @default(cuid())
+  name        String
+  description String?    @map("desc")
+  rating      Float      @default(0)
+  ratingCount Int        @default(0) @map("rating_count")
+  category    Category
+  city        String
+  location    String?
+  priceRange  String     @map("price_range") // e.g., "3~5" meaning 3000-5000 yen
+  images      String[]   // Array of image URLs
+  featured    Json?      // For featured badge info like {text: "Top Restaurant", icon: "stars-02"}
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  favorites   Favorite[]
+
+  @@map("restaurants")
+}
+
+model Favorite {
+  id           String     @id @default(cuid())
+  userId       String
+  restaurantId String
+  createdAt    DateTime   @default(now())
+  
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, restaurantId])
+  @@map("favorites")
+}
+
+enum Category {
+  ENTIRE
+  RAMEN_TSUKEMEN
+  TONKATSU_KUSHIKATSU
+  SOBA_UDON
+  OKONOMIYAKI_TAKOYAKI
+  SUKIYAKI_SHABU_SHABU
+  TEMPURA
+  EEL
+  YAKITORI_SKEWER
+
+  @@map("categories")
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
